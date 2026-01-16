@@ -1,10 +1,11 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey, Index } from 'typeorm';
+import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex } from 'typeorm';
 
 export class CreateMessageLogsTable1705300100000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create enum type for message status
     await queryRunner.query(`
       CREATE TYPE message_status AS ENUM (
+        'unprocessed',
         'pending',
         'processing',
         'sent',
@@ -59,7 +60,7 @@ export class CreateMessageLogsTable1705300100000 implements MigrationInterface {
           {
             name: 'status',
             type: 'message_status',
-            default: "'pending'",
+            default: "'unprocessed'",
             isNullable: false,
           },
           {
@@ -115,7 +116,7 @@ export class CreateMessageLogsTable1705300100000 implements MigrationInterface {
     // Create indexes
     await queryRunner.createIndex(
       'message_logs',
-      new Index({
+      new TableIndex({
         name: 'IDX_MESSAGE_LOGS_IDEMPOTENCY',
         columnNames: ['idempotency_key'],
         isUnique: true,
@@ -124,7 +125,7 @@ export class CreateMessageLogsTable1705300100000 implements MigrationInterface {
 
     await queryRunner.createIndex(
       'message_logs',
-      new Index({
+      new TableIndex({
         name: 'IDX_MESSAGE_LOGS_STATUS_SCHEDULED',
         columnNames: ['status', 'scheduled_for'],
       })
@@ -132,7 +133,7 @@ export class CreateMessageLogsTable1705300100000 implements MigrationInterface {
 
     await queryRunner.createIndex(
       'message_logs',
-      new Index({
+      new TableIndex({
         name: 'IDX_MESSAGE_LOGS_USER_DATE',
         columnNames: ['user_id', 'scheduled_date', 'message_type'],
       })
@@ -140,7 +141,7 @@ export class CreateMessageLogsTable1705300100000 implements MigrationInterface {
 
     await queryRunner.createIndex(
       'message_logs',
-      new Index({
+      new TableIndex({
         name: 'IDX_MESSAGE_LOGS_RECOVERY',
         columnNames: ['status', 'scheduled_for'],
         where: "status IN ('pending', 'failed', 'retrying')",

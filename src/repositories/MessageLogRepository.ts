@@ -9,35 +9,35 @@ export class MessageLogRepository {
     this.repository = AppDataSource.getRepository(MessageLog);
   }
 
-  async create(data: {
+  create = async (data: {
     userId: string;
     messageType: string;
     scheduledDate: Date;
     scheduledFor: Date;
     idempotencyKey: string;
-  }): Promise<MessageLog> {
+  }): Promise<MessageLog> => {
     const messageLog = this.repository.create(data);
     return await this.repository.save(messageLog);
   }
 
-  async findByIdempotencyKey(idempotencyKey: string): Promise<MessageLog | null> {
+  findByIdempotencyKey = async (idempotencyKey: string): Promise<MessageLog | null> => {
     return await this.repository.findOne({
       where: { idempotencyKey },
     });
   }
 
-  async findById(id: string): Promise<MessageLog | null> {
+  findById = async (id: string): Promise<MessageLog | null> => {
     return await this.repository.findOne({
       where: { id },
       relations: ['user'],
     });
   }
 
-  async updateStatus(
+  updateStatus = async (
     id: string,
     status: MessageStatus,
     errorMessage?: string
-  ): Promise<MessageLog | null> {
+  ): Promise<MessageLog | null> => {
     const messageLog = await this.findById(id);
     if (!messageLog) {
       return null;
@@ -57,7 +57,7 @@ export class MessageLogRepository {
     return await this.repository.save(messageLog);
   }
 
-  async findUnsentMessages(cutoffTime: Date): Promise<MessageLog[]> {
+  findUnsentMessages = async (cutoffTime: Date): Promise<MessageLog[]> => {
     return await this.repository.find({
       where: {
         scheduledFor: LessThan(cutoffTime),
@@ -67,17 +67,29 @@ export class MessageLogRepository {
     });
   }
 
-  async createOrGet(data: {
+  createOrGet = async (data: {
     userId: string;
     messageType: string;
     scheduledDate: Date;
     scheduledFor: Date;
     idempotencyKey: string;
-  }): Promise<MessageLog> {
+  }): Promise<MessageLog> => {
     const existing = await this.findByIdempotencyKey(data.idempotencyKey);
     if (existing) {
       return existing;
     }
     return await this.create(data);
+  }
+
+  findPendingForDate = async (date: Date): Promise<MessageLog[]> => {
+    // Format date as YYYY-MM-DD for comparison
+    const dateStr = date.toISOString().split('T')[0];
+
+    return await this.repository
+      .createQueryBuilder('message_log')
+      .where('message_log.status = :status', { status: MessageStatus.PENDING })
+      .andWhere('DATE(message_log.scheduled_date) = :date', { date: dateStr })
+      .leftJoinAndSelect('message_log.user', 'user')
+      .getMany();
   }
 }

@@ -10,6 +10,7 @@ import {
 import { User } from './User';
 
 export enum MessageStatus {
+  UNPROCESSED = 'unprocessed',
   PENDING = 'pending',
   PROCESSING = 'processing',
   SENT = 'sent',
@@ -44,7 +45,7 @@ export class MessageLog {
   @Column({
     type: 'enum',
     enum: MessageStatus,
-    default: MessageStatus.PENDING,
+    default: MessageStatus.UNPROCESSED,
   })
   status!: MessageStatus;
 

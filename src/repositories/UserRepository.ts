@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { User } from '../models/User';
-import { CreateUserDto, UpdateUserDto } from '../types';
+import { CreateUserDto, UpdateUserDto } from '../shared/types';
 
 export class UserRepository {
   private repository: Repository<User>;
@@ -10,7 +10,7 @@ export class UserRepository {
     this.repository = AppDataSource.getRepository(User);
   }
 
-  async create(data: CreateUserDto): Promise<User> {
+  create = async (data: CreateUserDto): Promise<User> => {
     const user = this.repository.create({
       firstName: data.firstName,
       lastName: data.lastName,
@@ -22,19 +22,19 @@ export class UserRepository {
     return await this.repository.save(user);
   }
 
-  async findById(id: string): Promise<User | null> {
+  findById = async (id: string): Promise<User | null> => {
     return await this.repository.findOne({
       where: { id },
     });
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  findByEmail = async (email: string): Promise<User | null> => {
     return await this.repository.findOne({
       where: { email },
     });
   }
 
-  async update(id: string, data: UpdateUserDto): Promise<User | null> {
+  update = async (id: string, data: UpdateUserDto): Promise<User | null> => {
     const user = await this.findById(id);
     if (!user) {
       return null;
@@ -49,12 +49,12 @@ export class UserRepository {
     return await this.repository.save(user);
   }
 
-  async softDelete(id: string): Promise<boolean> {
+  softDelete = async (id: string): Promise<boolean> => {
     const result = await this.repository.softDelete(id);
     return (result.affected ?? 0) > 0;
   }
 
-  async findUsersWithBirthdayInWindow(_startTime: Date, _endTime: Date): Promise<User[]> {
+  findUsersWithBirthdayInWindow = async (_startTime: Date, _endTime: Date): Promise<User[]> => {
     // Find users whose birthday is today AND whose 9 AM local time falls within the window
     const today = new Date();
     const month = today.getMonth() + 1;
@@ -68,7 +68,7 @@ export class UserRepository {
       .getMany();
   }
 
-  async findAll(): Promise<User[]> {
+  findAll = async (): Promise<User[]> => {
     return await this.repository.find({
       where: { deletedAt: undefined },
     });

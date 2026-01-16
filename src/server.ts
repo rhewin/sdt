@@ -1,3 +1,4 @@
+import 'tsconfig-paths/register';
 import { createApp } from './app';
 import { initializeDatabase, closeDatabase } from './config/database';
 import { closeRedis } from './config/redis';

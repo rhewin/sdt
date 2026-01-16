@@ -30,7 +30,7 @@ export const logger = pino({
 });
 
 // Create child logger with trace_id
-export function createLoggerWithTrace(trace_id: string) {
+export const createLoggerWithTrace = (trace_id: string) => {
   return logger.child({ trace_id });
 }
 

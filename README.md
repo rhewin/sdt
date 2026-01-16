@@ -38,3 +38,114 @@ curl --location 'https://email-service.digitalenvision.com.au/send-email' \
 - Be mindful of race conditions, duplicate messages are unacceptable
 - Think about scalability (with the limits of localhost), will the system be able to handle thousands of birthdays a day?
 - Extra point, add PUT /user for the user to edit their details. Make sure the birthday message will still be delivered on the correct day.
+
+
+## What's Done
+- Utilize `Docker` containerization for easier deployment with health check
+- Use `TypeORM` that support database migration
+- `Pino` logger for fast structured logging with trace_id mechanism
+- Use `Zod` a lightweight, minimal overhad for schema validation
+- Utilize `BullMQ` for job queue system and support exponential backoff retry logic
+- Using `Opossum` as a circuit breaker
+- Implement idempotency protection and race condition prevention
+- Support graceful shutdown, allowing clean stopping services
+- Separating process between API server & worker
+- Connection pooling support for PostgreSQL
+- Added manual trigger for late registered user that has a birthday on that day
+
+
+## How to Run
+### Development Mode
+```bash
+# Install dependencies
+npm install
+
+# Start infrastructure
+cd docker && docker-compose up -d postgres redis
+
+# Run migrations
+npm run migrate:run
+
+# Terminal 1: Start API
+npm run dev:server
+
+# Terminal 2: Start Worker
+npm run dev:worker
+```
+
+### Production Mode
+```bash
+cd docker
+docker-compose up -d
+docker-compose exec app npm run migrate:run
+```
+
+
+## Testing
+### Manual Testing
+```bash
+# Create user with today's birthday
+curl -X POST http://localhost:3000/user \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "birthDate": "1990-01-15",
+    "timezone": "America/New_York"
+  }'
+
+# Get User
+curl http://localhost:3000/user/{USER_ID}
+
+
+# Update User
+curl -X PUT http://localhost:3000/user/{USER_ID} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "timezone": "America/Los_Angeles"
+  }'
+
+# Delete User
+curl -X DELETE http://localhost:3000/user/{USER_ID}
+
+# Check health
+curl http://localhost:3000/health
+```
+
+### Verify Worker
+```bash
+# Check worker logs
+docker-compose logs -f worker
+```
+
+### Verify Queue
+```bash
+# Connect to Redis
+docker exec -it sdt-redis redis-cli
+
+# List keys
+KEYS *
+
+# Check queue stats
+KEYS bull:birthday-messages:*
+```
+
+
+## Database Schema
+### users
+- `id` (UUID, PK)
+- `first_name`, `last_name`, `email`
+- `birth_date` (DATE)
+- `timezone` (IANA string)
+- `created_at`, `updated_at`, `deleted_at`
+
+### message_logs
+- `id` (UUID, PK)
+- `user_id` (FK → users)
+- `message_type` (birthday, anniversary, etc.)
+- `scheduled_date`, `scheduled_for` (exact UTC time)
+- `idempotency_key` (UNIQUE)
+- `status` (unprocessed, pending, processing, sent, failed, retrying)
+- `attempt_count`, `last_attempt_at`, `sent_at`
+- `error_message`

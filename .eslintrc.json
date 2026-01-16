@@ -18,5 +18,15 @@
     "node": true,
     "es2022": true,
     "jest": true
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.js", "*.mjs"],
+      "parser": "espree",
+      "parserOptions": {
+        "ecmaVersion": 2022,
+        "sourceType": "module"
+      }
+    }
+  ]
 }
