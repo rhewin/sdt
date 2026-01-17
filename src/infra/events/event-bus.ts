@@ -24,31 +24,36 @@ class EventBus {
       try {
         await handler(event);
       } catch (error) {
-        logger.error({
-          eventName,
-          error: (error as Error).message,
-          stack: (error as Error).stack,
-          traceId: event.traceId,
-        }, 'Event handler failed');
+        logger.error(
+          {
+            eventName,
+            error: (error as Error).message,
+            stack: (error as Error).stack,
+            traceId: event.traceId,
+          },
+          'Event handler failed'
+        );
       }
     });
 
     logger.debug({ eventName, handlerCount: handlers.length }, 'Event handler registered');
-  }
+  };
 
   /**
    * Emit an event
    */
-  emit = async <T extends DomainEvent> (event: T): Promise<void> => {
-    logger.debug({
-      eventName: event.name,
-      traceId: event.traceId,
-      timestamp: event.timestamp,
-    }, 'Emitting event');
+  emit = async <T extends DomainEvent>(event: T): Promise<void> => {
+    logger.debug(
+      {
+        eventName: event.name,
+        traceId: event.traceId,
+        timestamp: event.timestamp,
+      },
+      'Emitting event'
+    );
 
     this.emitter.emit(event.name, event);
-  }
+  };
 }
-
 
 export const eventBus = new EventBus();

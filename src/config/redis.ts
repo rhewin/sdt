@@ -19,11 +19,11 @@ redisConnection.on('connect', () => {
   logger.info('Redis connection established');
 });
 
-redisConnection.on('error', (error) => {
+redisConnection.on('error', error => {
   logger.error({ error: error.message }, 'Redis connection error');
 });
 
 export const closeRedis = async (): Promise<void> => {
   await redisConnection.quit();
   logger.info('Redis connection closed');
-}
+};

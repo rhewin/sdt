@@ -18,20 +18,20 @@ export class MessageLogRepository {
   }): Promise<MessageLog> => {
     const messageLog = this.repository.create(data);
     return await this.repository.save(messageLog);
-  }
+  };
 
   findByIdempotencyKey = async (idempotencyKey: string): Promise<MessageLog | null> => {
     return await this.repository.findOne({
       where: { idempotencyKey },
     });
-  }
+  };
 
   findById = async (id: string): Promise<MessageLog | null> => {
     return await this.repository.findOne({
       where: { id },
       relations: ['user'],
     });
-  }
+  };
 
   updateStatus = async (
     id: string,
@@ -55,7 +55,7 @@ export class MessageLogRepository {
     }
 
     return await this.repository.save(messageLog);
-  }
+  };
 
   update = async (id: string, data: Partial<MessageLog>): Promise<MessageLog | null> => {
     const messageLog = await this.findById(id);
@@ -65,7 +65,7 @@ export class MessageLogRepository {
 
     Object.assign(messageLog, data);
     return await this.repository.save(messageLog);
-  }
+  };
 
   findUnsentMessages = async (cutoffTime: Date): Promise<MessageLog[]> => {
     return await this.repository.find({
@@ -75,7 +75,7 @@ export class MessageLogRepository {
       },
       relations: ['user'],
     });
-  }
+  };
 
   createOrGet = async (data: {
     userId: string;
@@ -89,7 +89,7 @@ export class MessageLogRepository {
       return existing;
     }
     return await this.create(data);
-  }
+  };
 
   findPendingForDate = async (date: Date): Promise<MessageLog[]> => {
     // Format date as YYYY-MM-DD for comparison
@@ -101,5 +101,5 @@ export class MessageLogRepository {
       .andWhere('DATE(message_log.scheduled_date) = :date', { date: dateStr })
       .leftJoinAndSelect('message_log.user', 'user')
       .getMany();
-  }
+  };
 }

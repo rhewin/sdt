@@ -10,7 +10,6 @@ import { UserRepository } from '@/domains/user/user.repository';
 import { MessageLogRepository } from '@/domains/message-log/message-log.repository';
 import { MessageStatus } from '@/domains/message-log/message-log.model';
 
-
 export class HourlySchedulerService {
   private cronJob: cron.ScheduledTask | null = null;
   private userRepository: UserRepository;
@@ -28,14 +27,14 @@ export class HourlySchedulerService {
     });
 
     logger.info('Hourly scheduler started (runs every hour at minute 0)');
-  }
+  };
 
   stop = (): void => {
     if (this.cronJob) {
       this.cronJob.stop();
       logger.info('Hourly scheduler stopped');
     }
-  }
+  };
 
   private runScheduler = async (): Promise<void> => {
     const trace_id = `scheduler-${Date.now()}`;
@@ -52,13 +51,16 @@ export class HourlySchedulerService {
 
       logger.info({ trace_id }, 'Hourly scheduler completed');
     } catch (error) {
-      logger.error({
-        trace_id,
-        error: (error as Error).message,
-        stack: (error as Error).stack
-      }, 'Hourly scheduler failed');
+      logger.error(
+        {
+          trace_id,
+          error: (error as Error).message,
+          stack: (error as Error).stack,
+        },
+        'Hourly scheduler failed'
+      );
     }
-  }
+  };
 
   /**
    * Find all users with birthday today and create/update message_logs entries
@@ -68,56 +70,67 @@ export class HourlySchedulerService {
     const currentMonth = today.month;
     const currentDay = today.day;
 
-    logger.info({
-      trace_id,
-      month: currentMonth,
-      day: currentDay
-    }, 'Searching for users with birthday today');
+    logger.info(
+      {
+        trace_id,
+        month: currentMonth,
+        day: currentDay,
+      },
+      'Searching for users with birthday today'
+    );
 
     // Find all users with birthday today (month and day match)
     const allUsers = await this.userRepository.findAll();
     const birthdayUsers = allUsers.filter(user => {
-      const birthDate = user.birthDate instanceof Date
-        ? DateTime.fromJSDate(user.birthDate)
-        : DateTime.fromISO(user.birthDate as unknown as string);
+      const birthDate =
+        user.birthDate instanceof Date
+          ? DateTime.fromJSDate(user.birthDate)
+          : DateTime.fromISO(user.birthDate as unknown as string);
 
       return birthDate.month === currentMonth && birthDate.day === currentDay;
     });
 
-    logger.info({
-      trace_id,
-      count: birthdayUsers.length
-    }, 'Found users with birthday today');
+    logger.info(
+      {
+        trace_id,
+        count: birthdayUsers.length,
+      },
+      'Found users with birthday today'
+    );
 
     // Process each birthday user
     for (const user of birthdayUsers) {
       try {
         await this.processUserBirthday(user, trace_id);
       } catch (error) {
-        logger.error({
-          trace_id,
-          userId: user.id,
-          error: (error as Error).message
-        }, 'Failed to process user birthday');
+        logger.error(
+          {
+            trace_id,
+            userId: user.id,
+            error: (error as Error).message,
+          },
+          'Failed to process user birthday'
+        );
       }
     }
-  }
+  };
 
   /**
    * Process a single user's birthday - create message_logs entry if not exists
    */
   private processUserBirthday = async (user: User, trace_id: string): Promise<void> => {
     const todayInUserTz = DateTime.now().setZone(user.timezone);
-    const birthDate = user.birthDate instanceof Date
-      ? DateTime.fromJSDate(user.birthDate)
-      : DateTime.fromISO(user.birthDate as unknown as string);
+    const birthDate =
+      user.birthDate instanceof Date
+        ? DateTime.fromJSDate(user.birthDate)
+        : DateTime.fromISO(user.birthDate as unknown as string);
 
     // Calculate execution time (BIRTHDAY_MESSAGE_HOUR in user's timezone)
     const executionTime = todayInUserTz.set({
       hour: BIRTHDAY_MESSAGE_HOUR,
       minute: 0,
       second: 0,
-      millisecond: 0
+      millisecond: 0,
     });
 
     const executionTimeUtc = executionTime.toUTC();
@@ -132,17 +145,20 @@ export class HourlySchedulerService {
       if (existingLog.status === MessageStatus.UNPROCESSED) {
         await this.messageLogRepository.updateStatus(existingLog.id, MessageStatus.PENDING);
 
-        logger.info({
-          trace_id,
-          userId: user.id,
-          messageLogId: existingLog.id
-        }, 'Updated message_logs status from unprocessed to pending');
+        logger.info(
+          {
+            trace_id,
+            userId: user.id,
+            messageLogId: existingLog.id,
+          },
+          'Updated message_logs status from unprocessed to pending'
+        );
 
         logCriticalOperation(trace_id, 'message_status_updated_to_pending', {
           userId: user.id,
           email: user.email,
           messageLogId: existingLog.id,
-          previousStatus: 'unprocessed'
+          previousStatus: 'unprocessed',
         });
       }
     } else {
@@ -158,11 +174,14 @@ export class HourlySchedulerService {
       // Update to 'pending' status
       await this.messageLogRepository.updateStatus(messageLog.id, MessageStatus.PENDING);
 
-      logger.info({
-        trace_id,
-        userId: user.id,
-        messageLogId: messageLog.id
-      }, 'Created message_logs entry with pending status');
+      logger.info(
+        {
+          trace_id,
+          userId: user.id,
+          messageLogId: messageLog.id,
+        },
+        'Created message_logs entry with pending status'
+      );
 
       logCriticalOperation(trace_id, 'message_log_created_by_scheduler', {
         userId: user.id,
@@ -173,7 +192,7 @@ export class HourlySchedulerService {
         messageLogId: messageLog.id,
       });
     }
-  }
+  };
 
   /**
    * Queue pending messages whose scheduled_for time has arrived or passed
@@ -181,7 +200,10 @@ export class HourlySchedulerService {
    * @param trace_id - Trace ID for logging
    * @param checkDueTime - If false, queues all pending messages regardless of scheduled time (default: true)
    */
-  queueDueMessages = async (trace_id: string, checkDueTime: boolean = true): Promise<{
+  queueDueMessages = async (
+    trace_id: string,
+    checkDueTime: boolean = true
+  ): Promise<{
     total: number;
     queued: number;
     skippedNotDue: number;
@@ -194,11 +216,14 @@ export class HourlySchedulerService {
     // Find all pending messages for today
     const pendingMessages = await this.messageLogRepository.findPendingForDate(new Date(today));
 
-    logger.info({
-      trace_id,
-      count: pendingMessages.length,
-      currentTime: now.toISO()
-    }, 'Checking pending messages for due time');
+    logger.info(
+      {
+        trace_id,
+        count: pendingMessages.length,
+        currentTime: now.toISO(),
+      },
+      'Checking pending messages for due time'
+    );
 
     let queuedCount = 0;
     let skippedNotDue = 0;
@@ -212,13 +237,16 @@ export class HourlySchedulerService {
         // Check if scheduled time has arrived or passed (only if checkDueTime is true)
         if (checkDueTime && scheduledFor > now) {
           skippedNotDue++;
-          logger.debug({
-            trace_id,
-            messageLogId: messageLog.id,
-            scheduledFor: scheduledFor.toISO(),
-            currentTime: now.toISO(),
-            minutesUntilDue: scheduledFor.diff(now, 'minutes').minutes
-          }, 'Message not due yet, skipping');
+          logger.debug(
+            {
+              trace_id,
+              messageLogId: messageLog.id,
+              scheduledFor: scheduledFor.toISO(),
+              currentTime: now.toISO(),
+              minutesUntilDue: scheduledFor.diff(now, 'minutes').minutes,
+            },
+            'Message not due yet, skipping'
+          );
           continue;
         }
 
@@ -227,11 +255,14 @@ export class HourlySchedulerService {
 
         if (existingJob) {
           skippedAlreadyQueued++;
-          logger.debug({
-            trace_id,
-            messageLogId: messageLog.id,
-            jobId: messageLog.idempotencyKey
-          }, 'Job already exists in queue, skipping');
+          logger.debug(
+            {
+              trace_id,
+              messageLogId: messageLog.id,
+              jobId: messageLog.idempotencyKey,
+            },
+            'Job already exists in queue, skipping'
+          );
           continue;
         }
 
@@ -260,31 +291,40 @@ export class HourlySchedulerService {
           queuedAt: now.toISO(),
         });
 
-        logger.info({
-          trace_id,
-          messageLogId: messageLog.id,
-          userId: messageLog.userId,
-          jobId: job.id,
-          scheduledFor: scheduledFor.toISO()
-        }, 'Queued birthday message to BullMQ');
+        logger.info(
+          {
+            trace_id,
+            messageLogId: messageLog.id,
+            userId: messageLog.userId,
+            jobId: job.id,
+            scheduledFor: scheduledFor.toISO(),
+          },
+          'Queued birthday message to BullMQ'
+        );
       } catch (error) {
-        logger.error({
-          trace_id,
-          messageLogId: messageLog.id,
-          error: (error as Error).message
-        }, 'Failed to queue message to BullMQ');
+        logger.error(
+          {
+            trace_id,
+            messageLogId: messageLog.id,
+            error: (error as Error).message,
+          },
+          'Failed to queue message to BullMQ'
+        );
         failed.push(messageLog.id);
       }
     }
 
-    logger.info({
-      trace_id,
-      total: pendingMessages.length,
-      queued: queuedCount,
-      skippedNotDue,
-      skippedAlreadyQueued,
-      failed: failed.length
-    }, 'Queue due messages completed');
+    logger.info(
+      {
+        trace_id,
+        total: pendingMessages.length,
+        queued: queuedCount,
+        skippedNotDue,
+        skippedAlreadyQueued,
+        failed: failed.length,
+      },
+      'Queue due messages completed'
+    );
 
     return {
       total: pendingMessages.length,
@@ -293,5 +333,5 @@ export class HourlySchedulerService {
       skippedAlreadyQueued,
       failed,
     };
-  }
+  };
 }

@@ -20,19 +20,19 @@ export class UserRepository {
     });
 
     return await this.repository.save(user);
-  }
+  };
 
   findById = async (id: string): Promise<User | null> => {
     return await this.repository.findOne({
       where: { id },
     });
-  }
+  };
 
   findByEmail = async (email: string): Promise<User | null> => {
     return await this.repository.findOne({
       where: { email },
     });
-  }
+  };
 
   update = async (id: string, data: UpdateUserDto): Promise<User | null> => {
     const user = await this.findById(id);
@@ -47,12 +47,12 @@ export class UserRepository {
     if (data.timezone) user.timezone = data.timezone;
 
     return await this.repository.save(user);
-  }
+  };
 
   softDelete = async (id: string): Promise<boolean> => {
     const result = await this.repository.softDelete(id);
     return (result.affected ?? 0) > 0;
-  }
+  };
 
   findUsersWithBirthdayInWindow = async (_startTime: Date, _endTime: Date): Promise<User[]> => {
     // Find users whose birthday is today AND whose 9 AM local time falls within the window
@@ -66,11 +66,11 @@ export class UserRepository {
       .andWhere('EXTRACT(MONTH FROM user.birth_date) = :month', { month })
       .andWhere('EXTRACT(DAY FROM user.birth_date) = :day', { day })
       .getMany();
-  }
+  };
 
   findAll = async (): Promise<User[]> => {
     return await this.repository.find({
       where: { deletedAt: undefined },
     });
-  }
+  };
 }

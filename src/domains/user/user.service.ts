@@ -6,7 +6,6 @@ import { User } from './user.model';
 import { UserRepository } from './user.repository';
 import { createUserSchema, updateUserSchema } from './user.validation';
 
-
 export class UserService {
   private userRepository: UserRepository;
 
@@ -26,7 +25,9 @@ export class UserService {
 
     // Validate timezone (basic check)
     if (!isValidTimezoneFormat(validatedData.timezone)) {
-      throw new Error('Invalid timezone. Please provide a valid IANA timezone (e.g., America/New_York)');
+      throw new Error(
+        'Invalid timezone. Please provide a valid IANA timezone (e.g., America/New_York)'
+      );
     }
 
     // Validate birth date is not in the future
@@ -45,7 +46,7 @@ export class UserService {
     });
 
     return user;
-  }
+  };
 
   getUserById = async (id: string): Promise<User> => {
     const user = await this.userRepository.findById(id);
@@ -53,7 +54,7 @@ export class UserService {
       throw new Error('User not found');
     }
     return user;
-  }
+  };
 
   updateUser = async (id: string, data: UpdateUserDto): Promise<User> => {
     // Validate input
@@ -103,16 +104,16 @@ export class UserService {
     });
 
     return updatedUser;
-  }
+  };
 
   deleteUser = async (id: string): Promise<void> => {
     const success = await this.userRepository.softDelete(id);
     if (!success) {
       throw new Error('User not found or already deleted');
     }
-  }
+  };
 
   getAllUsers = async (): Promise<User[]> => {
     return await this.userRepository.findAll();
-  }
+  };
 }

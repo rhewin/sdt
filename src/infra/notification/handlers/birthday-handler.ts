@@ -29,9 +29,10 @@ export class BirthdayHandler implements NotificationHandler {
 
     try {
       // Extract birthday month and day
-      const birthDate = user.birthDate instanceof Date
-        ? DateTime.fromJSDate(user.birthDate)
-        : DateTime.fromISO(user.birthDate as unknown as string);
+      const birthDate =
+        user.birthDate instanceof Date
+          ? DateTime.fromJSDate(user.birthDate)
+          : DateTime.fromISO(user.birthDate as unknown as string);
 
       // Get today's date in user's timezone (no time)
       const todayInUserTz = DateTime.now().setZone(user.timezone);
@@ -39,7 +40,7 @@ export class BirthdayHandler implements NotificationHandler {
         hour: 0,
         minute: 0,
         second: 0,
-        millisecond: 0
+        millisecond: 0,
       });
 
       // Get birthday date for this year in user's timezone (no time)
@@ -49,21 +50,27 @@ export class BirthdayHandler implements NotificationHandler {
         hour: 0,
         minute: 0,
         second: 0,
-        millisecond: 0
+        millisecond: 0,
       });
 
-      logger.debug({
-        trace_id,
-        email: user.email,
-        birthMonth: birthDate.month,
-        birthDay: birthDate.day,
-        birthdayDateThisYear: birthdayDateThisYear.toISODate(),
-        todayDate: todayDateOnly.toISODate()
-      }, 'Checking if message_logs entry should be created');
+      logger.debug(
+        {
+          trace_id,
+          email: user.email,
+          birthMonth: birthDate.month,
+          birthDay: birthDate.day,
+          birthdayDateThisYear: birthdayDateThisYear.toISODate(),
+          todayDate: todayDateOnly.toISODate(),
+        },
+        'Checking if message_logs entry should be created'
+      );
 
       // Birthday date has already passed this year - skip
       if (birthdayDateThisYear < todayDateOnly) {
-        logger.debug({ trace_id, birthdayDate: birthdayDateThisYear.toISODate() }, 'Birthday date already passed this year, skipping');
+        logger.debug(
+          { trace_id, birthdayDate: birthdayDateThisYear.toISODate() },
+          'Birthday date already passed this year, skipping'
+        );
         return { success: true };
       }
 
@@ -74,7 +81,7 @@ export class BirthdayHandler implements NotificationHandler {
         hour: BIRTHDAY_MESSAGE_HOUR,
         minute: 0,
         second: 0,
-        millisecond: 0
+        millisecond: 0,
       });
 
       const executionTimeUtc = executionTime.toUTC();
@@ -122,27 +129,33 @@ export class BirthdayHandler implements NotificationHandler {
         messageLogId: messageLog.id,
       });
 
-      logger.info({
-        trace_id,
-        userId: user.id,
-        messageLogId: messageLog.id,
-        scheduledFor: executionTimeUtc.toISO(),
-        status,
-        isBirthdayToday,
-        executionTimePassed
-      }, 'Birthday message log entry created');
+      logger.info(
+        {
+          trace_id,
+          userId: user.id,
+          messageLogId: messageLog.id,
+          scheduledFor: executionTimeUtc.toISO(),
+          status,
+          isBirthdayToday,
+          executionTimePassed,
+        },
+        'Birthday message log entry created'
+      );
 
       return {
         success: true,
         messageLogId: messageLog.id,
       };
     } catch (error) {
-      logger.error({
-        trace_id,
-        userId: user.id,
-        error: (error as Error).message,
-        stack: (error as Error).stack
-      }, 'Failed to create birthday message log entry');
+      logger.error(
+        {
+          trace_id,
+          userId: user.id,
+          error: (error as Error).message,
+          stack: (error as Error).stack,
+        },
+        'Failed to create birthday message log entry'
+      );
 
       logError(trace_id, error as Error, {
         context: 'Failed to create birthday message log entry',
@@ -154,5 +167,5 @@ export class BirthdayHandler implements NotificationHandler {
         error: (error as Error).message,
       };
     }
-  }
+  };
 }

@@ -7,7 +7,6 @@ import { UserRepository } from '@/domains/user/user.repository';
 import { MessageLogRepository } from '@/domains/message-log/message-log.repository';
 import { MessageStatus } from '@/domains/message-log/message-log.model';
 
-
 export class BirthdayWorker {
   private worker: Worker;
   private userRepository: UserRepository;
@@ -33,7 +32,7 @@ export class BirthdayWorker {
     );
 
     // Worker event handlers
-    this.worker.on('completed', (job) => {
+    this.worker.on('completed', job => {
       const trace_id = job.data.trace_id || 'worker';
       logCriticalOperation(trace_id, 'job_completed', {
         jobId: job.id,
@@ -51,12 +50,14 @@ export class BirthdayWorker {
       });
     });
 
-    this.worker.on('error', (error) => {
+    this.worker.on('error', error => {
       logger.error({ error: error.message, stack: error.stack }, 'Worker error');
     });
   }
 
-  private processJob = async (job: Job<BirthdayMessageData>): Promise<{ success: boolean; skipped?: boolean }> => {
+  private processJob = async (
+    job: Job<BirthdayMessageData>
+  ): Promise<{ success: boolean; skipped?: boolean }> => {
     const { userId, scheduledFor, trace_id = 'worker' } = job.data;
 
     logCriticalOperation(trace_id, 'job_processing_started', {
@@ -68,7 +69,8 @@ export class BirthdayWorker {
 
     try {
       // 1. Look up existing message log (should already exist from user creation)
-      const idempotencyKey = job.id || `${userId}:birthday:${new Date(scheduledFor).toISOString().split('T')[0]}`;
+      const idempotencyKey =
+        job.id || `${userId}:birthday:${new Date(scheduledFor).toISOString().split('T')[0]}`;
 
       const messageLog = await this.messageLogRepository.findByIdempotencyKey(idempotencyKey);
 
@@ -89,16 +91,22 @@ export class BirthdayWorker {
       if (messageLog.status === MessageStatus.PROCESSING) {
         // Another worker is already processing this - should not happen with BullMQ job IDs
         // but protect against it anyway
-        logger.warn({
-          trace_id,
-          jobId: job.id,
-          messageLogId: messageLog.id,
-          userId,
-        }, 'Message already being processed by another worker (race condition detected)');
+        logger.warn(
+          {
+            trace_id,
+            jobId: job.id,
+            messageLogId: messageLog.id,
+            userId,
+          },
+          'Message already being processed by another worker (race condition detected)'
+        );
         return { success: true, skipped: true };
       }
 
-      if (messageLog.status === MessageStatus.FAILED && messageLog.errorMessage?.includes('Cancelled')) {
+      if (
+        messageLog.status === MessageStatus.FAILED &&
+        messageLog.errorMessage?.includes('Cancelled')
+      ) {
         // Message was cancelled (user updated birthdate) - skip
         logCriticalOperation(trace_id, 'message_cancelled_skip', {
           jobId: job.id,
@@ -154,14 +162,19 @@ export class BirthdayWorker {
 
       // Try to update message log status
       try {
-        const idempotencyKey = job.id || `${userId}:birthday:${new Date(scheduledFor).toISOString().split('T')[0]}`;
+        const idempotencyKey =
+          job.id || `${userId}:birthday:${new Date(scheduledFor).toISOString().split('T')[0]}`;
         const messageLog = await this.messageLogRepository.findByIdempotencyKey(idempotencyKey);
 
         if (messageLog) {
           // Check if this is a permanent failure (400 errors)
           if (shouldRetry === false) {
             // Mark as permanently failed with error message
-            await this.messageLogRepository.updateStatus(messageLog.id, MessageStatus.FAILED, errorMessage);
+            await this.messageLogRepository.updateStatus(
+              messageLog.id,
+              MessageStatus.FAILED,
+              errorMessage
+            );
 
             logCriticalOperation(trace_id, 'message_permanently_failed', {
               jobId: job.id,
@@ -177,7 +190,8 @@ export class BirthdayWorker {
 
           // For retriable errors (500, timeout, or undefined)
           const maxAttempts = parseInt(process.env.QUEUE_MAX_RETRIES || '5');
-          const status = (job.attemptsMade + 1) >= maxAttempts ? MessageStatus.FAILED : MessageStatus.RETRYING;
+          const status =
+            job.attemptsMade + 1 >= maxAttempts ? MessageStatus.FAILED : MessageStatus.RETRYING;
           await this.messageLogRepository.updateStatus(messageLog.id, status, errorMessage);
         }
       } catch (updateError) {
@@ -189,10 +203,10 @@ export class BirthdayWorker {
       // Re-throw to let BullMQ handle retry (only for retriable errors)
       throw error;
     }
-  }
+  };
 
   close = async (): Promise<void> => {
     await this.worker.close();
     logger.info('Birthday worker closed');
-  }
+  };
 }

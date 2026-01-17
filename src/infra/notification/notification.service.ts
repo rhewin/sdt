@@ -41,15 +41,18 @@ export class NotificationService {
       };
     }
 
-    logger.debug({
-      traceId,
-      messageType,
-      userId: user.id,
-      email: user.email,
-    }, 'Scheduling notification via handler');
+    logger.debug(
+      {
+        traceId,
+        messageType,
+        userId: user.id,
+        email: user.email,
+      },
+      'Scheduling notification via handler'
+    );
 
     return handler.schedule(user, traceId);
-  }
+  };
 
   /**
    * Schedule all applicable notifications for a new user
@@ -58,15 +61,18 @@ export class NotificationService {
   scheduleAllForNewUser = async (user: User, traceId?: string): Promise<void> => {
     const trace_id = traceId || `schedule-all-${user.id}-${Date.now()}`;
 
-    logger.info({
-      trace_id,
-      userId: user.id,
-      email: user.email,
-    }, 'Scheduling all notifications for new user');
+    logger.info(
+      {
+        trace_id,
+        userId: user.id,
+        email: user.email,
+      },
+      'Scheduling all notifications for new user'
+    );
 
     // Schedule birthday message
     await this.scheduleNotification('birthday', user, trace_id);
-  }
+  };
 
   /**
    * Handle user update - reschedule notifications if birthdate or timezone changed
@@ -93,20 +99,26 @@ export class NotificationService {
     const timezoneChanged = changes.timezone !== undefined;
 
     if (!birthdateChanged && !timezoneChanged) {
-      logger.debug({ trace_id, userId: user.id }, 'No birthdate or timezone change, skipping notification update');
+      logger.debug(
+        { trace_id, userId: user.id },
+        'No birthdate or timezone change, skipping notification update'
+      );
       return;
     }
 
-    logger.info({
-      trace_id,
-      userId: user.id,
-      birthdateChanged,
-      timezoneChanged,
-      oldBirthDate: oldUser.birthDate,
-      newBirthDate: user.birthDate,
-      oldTimezone: oldUser.timezone,
-      newTimezone: user.timezone,
-    }, 'User birthdate or timezone changed, updating message_log');
+    logger.info(
+      {
+        trace_id,
+        userId: user.id,
+        birthdateChanged,
+        timezoneChanged,
+        oldBirthDate: oldUser.birthDate,
+        newBirthDate: user.birthDate,
+        oldTimezone: oldUser.timezone,
+        newTimezone: user.timezone,
+      },
+      'User birthdate or timezone changed, updating message_log'
+    );
 
     try {
       // If birthdate changed, we need to cancel old birthday message and create new one
@@ -118,15 +130,18 @@ export class NotificationService {
         await this.handleTimezoneChange(user, oldUser, trace_id);
       }
     } catch (error) {
-      logger.error({
-        trace_id,
-        userId: user.id,
-        error: (error as Error).message,
-        stack: (error as Error).stack,
-      }, 'Failed to update message_log after user update');
+      logger.error(
+        {
+          trace_id,
+          userId: user.id,
+          error: (error as Error).message,
+          stack: (error as Error).stack,
+        },
+        'Failed to update message_log after user update'
+      );
       // Don't throw - user update should succeed even if message log update fails
     }
-  }
+  };
 
   /**
    * Handle birthdate change - cancel old message and create new one
@@ -137,19 +152,30 @@ export class NotificationService {
    * 3. Update message_log to FAILED (marks as cancelled)
    * 4. Create new message_log for new birthday
    */
-  private handleBirthdateChange = async (user: User, oldUser: User, trace_id: string): Promise<void> => {
+  private handleBirthdateChange = async (
+    user: User,
+    oldUser: User,
+    trace_id: string
+  ): Promise<void> => {
     // Find old message_log entry for old birthday (this year)
-    const oldBirthDate = oldUser.birthDate instanceof Date
-      ? DateTime.fromJSDate(oldUser.birthDate)
-      : DateTime.fromISO(oldUser.birthDate as unknown as string);
+    const oldBirthDate =
+      oldUser.birthDate instanceof Date
+        ? DateTime.fromJSDate(oldUser.birthDate)
+        : DateTime.fromISO(oldUser.birthDate as unknown as string);
 
     const today = DateTime.now();
-    const oldScheduledDate = today.set({
-      month: oldBirthDate.month,
-      day: oldBirthDate.day,
-    }).toFormat('yyyy-MM-dd');
+    const oldScheduledDate = today
+      .set({
+        month: oldBirthDate.month,
+        day: oldBirthDate.day,
+      })
+      .toFormat('yyyy-MM-dd');
 
-    const oldIdempotencyKey = generateIdempotencyKey(user.id, 'birthday', new Date(oldScheduledDate));
+    const oldIdempotencyKey = generateIdempotencyKey(
+      user.id,
+      'birthday',
+      new Date(oldScheduledDate)
+    );
 
     // STEP 1: Remove job from BullMQ FIRST (prevents race with worker)
     try {
@@ -161,18 +187,24 @@ export class NotificationService {
           jobId: oldIdempotencyKey,
           oldBirthDate: `${oldBirthDate.month}-${oldBirthDate.day}`,
         });
-        logger.info({
-          trace_id,
-          userId: user.id,
-          jobId: oldIdempotencyKey,
-        }, 'Removed old job from BullMQ before birthdate change');
+        logger.info(
+          {
+            trace_id,
+            userId: user.id,
+            jobId: oldIdempotencyKey,
+          },
+          'Removed old job from BullMQ before birthdate change'
+        );
       }
     } catch (error) {
-      logger.error({
-        trace_id,
-        userId: user.id,
-        error: (error as Error).message,
-      }, 'Failed to remove old job from BullMQ');
+      logger.error(
+        {
+          trace_id,
+          userId: user.id,
+          error: (error as Error).message,
+        },
+        'Failed to remove old job from BullMQ'
+      );
       // Continue anyway - job might not exist or already completed
     }
 
@@ -182,12 +214,15 @@ export class NotificationService {
     if (oldMessageLog) {
       // CRITICAL: If PROCESSING, the worker already picked it up - abort!
       if (oldMessageLog.status === MessageStatus.PROCESSING) {
-        logger.warn({
-          trace_id,
-          userId: user.id,
-          oldMessageLogId: oldMessageLog.id,
-          status: oldMessageLog.status,
-        }, 'Message already being processed, cannot cancel - allowing it to complete');
+        logger.warn(
+          {
+            trace_id,
+            userId: user.id,
+            oldMessageLogId: oldMessageLog.id,
+            status: oldMessageLog.status,
+          },
+          'Message already being processed, cannot cancel - allowing it to complete'
+        );
 
         // Still create new message for new birthday
         await this.scheduleNotification('birthday', user, trace_id);
@@ -196,18 +231,24 @@ export class NotificationService {
 
       // If SENT, just log and create new message
       if (oldMessageLog.status === MessageStatus.SENT) {
-        logger.debug({
-          trace_id,
-          userId: user.id,
-          oldMessageLogId: oldMessageLog.id,
-        }, 'Old message already sent, creating new message for new birthdate');
+        logger.debug(
+          {
+            trace_id,
+            userId: user.id,
+            oldMessageLogId: oldMessageLog.id,
+          },
+          'Old message already sent, creating new message for new birthdate'
+        );
 
         await this.scheduleNotification('birthday', user, trace_id);
         return;
       }
 
       // Safe to cancel (UNPROCESSED or PENDING)
-      if (oldMessageLog.status === MessageStatus.UNPROCESSED || oldMessageLog.status === MessageStatus.PENDING) {
+      if (
+        oldMessageLog.status === MessageStatus.UNPROCESSED ||
+        oldMessageLog.status === MessageStatus.PENDING
+      ) {
         await this.messageLogRepository.updateStatus(
           oldMessageLog.id,
           MessageStatus.FAILED,
@@ -221,25 +262,31 @@ export class NotificationService {
           newBirthDate: user.birthDate,
         });
 
-        logger.info({
-          trace_id,
-          userId: user.id,
-          oldMessageLogId: oldMessageLog.id,
-          oldBirthDate: `${oldBirthDate.month}-${oldBirthDate.day}`,
-        }, 'Cancelled old birthday message due to birthdate change');
+        logger.info(
+          {
+            trace_id,
+            userId: user.id,
+            oldMessageLogId: oldMessageLog.id,
+            oldBirthDate: `${oldBirthDate.month}-${oldBirthDate.day}`,
+          },
+          'Cancelled old birthday message due to birthdate change'
+        );
       }
     }
 
     // STEP 3: Create new message_log for new birthday
     await this.scheduleNotification('birthday', user, trace_id);
 
-    logger.info({
-      trace_id,
-      userId: user.id,
-      oldBirthDate: `${oldBirthDate.month}-${oldBirthDate.day}`,
-      newBirthDate: user.birthDate,
-    }, 'Birthday message rescheduled for new birthdate');
-  }
+    logger.info(
+      {
+        trace_id,
+        userId: user.id,
+        oldBirthDate: `${oldBirthDate.month}-${oldBirthDate.day}`,
+        newBirthDate: user.birthDate,
+      },
+      'Birthday message rescheduled for new birthdate'
+    );
+  };
 
   /**
    * Handle timezone change - update scheduled_for time in existing message_log
@@ -250,17 +297,24 @@ export class NotificationService {
    * 3. Update message_log with new scheduled_for time
    * 4. Re-queue to BullMQ if status is PENDING and time is due
    */
-  private handleTimezoneChange = async (user: User, oldUser: User, trace_id: string): Promise<void> => {
+  private handleTimezoneChange = async (
+    user: User,
+    oldUser: User,
+    trace_id: string
+  ): Promise<void> => {
     // Birthday didn't change, only timezone - need to recalculate scheduled_for
-    const birthDate = user.birthDate instanceof Date
-      ? DateTime.fromJSDate(user.birthDate)
-      : DateTime.fromISO(user.birthDate as unknown as string);
+    const birthDate =
+      user.birthDate instanceof Date
+        ? DateTime.fromJSDate(user.birthDate)
+        : DateTime.fromISO(user.birthDate as unknown as string);
 
     const today = DateTime.now();
-    const scheduledDate = today.set({
-      month: birthDate.month,
-      day: birthDate.day,
-    }).toFormat('yyyy-MM-dd');
+    const scheduledDate = today
+      .set({
+        month: birthDate.month,
+        day: birthDate.day,
+      })
+      .toFormat('yyyy-MM-dd');
 
     const idempotencyKey = generateIdempotencyKey(user.id, 'birthday', new Date(scheduledDate));
 
@@ -275,18 +329,24 @@ export class NotificationService {
           oldTimezone: oldUser.timezone,
           newTimezone: user.timezone,
         });
-        logger.info({
-          trace_id,
-          userId: user.id,
-          jobId: idempotencyKey,
-        }, 'Removed old job from BullMQ before timezone change');
+        logger.info(
+          {
+            trace_id,
+            userId: user.id,
+            jobId: idempotencyKey,
+          },
+          'Removed old job from BullMQ before timezone change'
+        );
       }
     } catch (error) {
-      logger.error({
-        trace_id,
-        userId: user.id,
-        error: (error as Error).message,
-      }, 'Failed to remove old job from BullMQ');
+      logger.error(
+        {
+          trace_id,
+          userId: user.id,
+          error: (error as Error).message,
+        },
+        'Failed to remove old job from BullMQ'
+      );
       // Continue anyway
     }
 
@@ -294,29 +354,38 @@ export class NotificationService {
     const existingMessageLog = await this.messageLogRepository.findByIdempotencyKey(idempotencyKey);
 
     if (!existingMessageLog) {
-      logger.debug({ trace_id, userId: user.id }, 'No existing message_log found for timezone update');
+      logger.debug(
+        { trace_id, userId: user.id },
+        'No existing message_log found for timezone update'
+      );
       return;
     }
 
     // CRITICAL: Abort if PROCESSING (worker already picked it up)
     if (existingMessageLog.status === MessageStatus.PROCESSING) {
-      logger.warn({
-        trace_id,
-        userId: user.id,
-        messageLogId: existingMessageLog.id,
-        status: existingMessageLog.status,
-      }, 'Message already being processed, cannot update time - allowing it to complete with old timezone');
+      logger.warn(
+        {
+          trace_id,
+          userId: user.id,
+          messageLogId: existingMessageLog.id,
+          status: existingMessageLog.status,
+        },
+        'Message already being processed, cannot update time - allowing it to complete with old timezone'
+      );
       return;
     }
 
     // Don't update if already sent
     if (existingMessageLog.status === MessageStatus.SENT) {
-      logger.debug({
-        trace_id,
-        userId: user.id,
-        messageLogId: existingMessageLog.id,
-        status: existingMessageLog.status,
-      }, 'Message already sent, not updating scheduled time');
+      logger.debug(
+        {
+          trace_id,
+          userId: user.id,
+          messageLogId: existingMessageLog.id,
+          status: existingMessageLog.status,
+        },
+        'Message already sent, not updating scheduled time'
+      );
       return;
     }
 
@@ -346,15 +415,18 @@ export class NotificationService {
       newScheduledFor,
     });
 
-    logger.info({
-      trace_id,
-      userId: user.id,
-      messageLogId: existingMessageLog.id,
-      oldTimezone: oldUser.timezone,
-      newTimezone: user.timezone,
-      oldScheduledFor: existingMessageLog.scheduledFor,
-      newScheduledFor,
-    }, 'Updated message scheduled time due to timezone change');
+    logger.info(
+      {
+        trace_id,
+        userId: user.id,
+        messageLogId: existingMessageLog.id,
+        oldTimezone: oldUser.timezone,
+        newTimezone: user.timezone,
+        oldScheduledFor: existingMessageLog.scheduledFor,
+        newScheduledFor,
+      },
+      'Updated message scheduled time due to timezone change'
+    );
 
     // STEP 5: If status is PENDING and new time is now due, re-queue immediately
     if (existingMessageLog.status === MessageStatus.PENDING) {
@@ -384,19 +456,25 @@ export class NotificationService {
             newScheduledFor: newScheduledFor,
           });
 
-          logger.info({
-            trace_id,
-            userId: user.id,
-            jobId: idempotencyKey,
-          }, 'Re-queued birthday message after timezone change (time is now due)');
+          logger.info(
+            {
+              trace_id,
+              userId: user.id,
+              jobId: idempotencyKey,
+            },
+            'Re-queued birthday message after timezone change (time is now due)'
+          );
         } catch (error) {
-          logger.error({
-            trace_id,
-            userId: user.id,
-            error: (error as Error).message,
-          }, 'Failed to re-queue message after timezone change');
+          logger.error(
+            {
+              trace_id,
+              userId: user.id,
+              error: (error as Error).message,
+            },
+            'Failed to re-queue message after timezone change'
+          );
         }
       }
     }
-  }
+  };
 }

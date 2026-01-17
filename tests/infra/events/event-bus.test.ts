@@ -1,5 +1,10 @@
 import { EventEmitter } from 'events';
-import { EventName, UserCreatedEvent, UserUpdatedEvent, UserDeletedEvent } from '@/infra/events/event.types';
+import {
+  EventName,
+  UserCreatedEvent,
+  UserUpdatedEvent,
+  UserDeletedEvent,
+} from '@/infra/events/event.types';
 import { User } from '@/domains/user/user.model';
 import * as loggerModule from '@/config/logger';
 
@@ -28,7 +33,7 @@ describe('EventBus', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: undefined,
-      getFullName: function() {
+      getFullName: function () {
         return `${this.firstName} ${this.lastName}`;
       },
       ...overrides,
@@ -40,6 +45,7 @@ describe('EventBus', () => {
 
     // Don't reset modules - keep the mocked logger
     // Import eventBus instance
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const eventBusModule = require('@/infra/events/event-bus');
     eventBus = eventBusModule.eventBus;
 
@@ -193,17 +199,19 @@ describe('EventBus', () => {
       await eventBus.emit(event);
       await new Promise(resolve => setImmediate(resolve));
 
-      expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        name: EventName.USER_CREATED,
-        timestamp: expect.any(Date),
-        traceId: 'trace-456',
-        data: expect.objectContaining({
-          user: expect.objectContaining({
-            id: 'specific-user-id',
-            email: 'test@example.com',
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: EventName.USER_CREATED,
+          timestamp: expect.any(Date),
+          traceId: 'trace-456',
+          data: expect.objectContaining({
+            user: expect.objectContaining({
+              id: 'specific-user-id',
+              email: 'test@example.com',
+            }),
           }),
-        }),
-      }));
+        })
+      );
     });
 
     it('should not call handlers for different events', async () => {
@@ -335,14 +343,16 @@ describe('EventBus', () => {
       await eventBus.emit(event);
       await new Promise(resolve => setImmediate(resolve));
 
-      expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        name: EventName.USER_UPDATED,
-        data: expect.objectContaining({
-          user,
-          oldUser,
-          changes: { email: 'john@example.com' },
-        }),
-      }));
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: EventName.USER_UPDATED,
+          data: expect.objectContaining({
+            user,
+            oldUser,
+            changes: { email: 'john@example.com' },
+          }),
+        })
+      );
     });
 
     it('should handle UserDeletedEvent correctly', async () => {
@@ -360,10 +370,12 @@ describe('EventBus', () => {
       await eventBus.emit(event);
       await new Promise(resolve => setImmediate(resolve));
 
-      expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        name: EventName.USER_DELETED,
-        data: { userId: 'user-123' },
-      }));
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: EventName.USER_DELETED,
+          data: { userId: 'user-123' },
+        })
+      );
     });
   });
 

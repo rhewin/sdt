@@ -31,7 +31,7 @@ export class UserController {
     } catch (error) {
       this.handleError(error, req, res, trace_id);
     }
-  }
+  };
 
   getUser = async (req: Request, res: Response): Promise<void> => {
     const trace_id = (req as Request & { trace_id: string }).trace_id;
@@ -53,7 +53,7 @@ export class UserController {
     } catch (error) {
       this.handleError(error, req, res, trace_id);
     }
-  }
+  };
 
   updateUser = async (req: Request, res: Response): Promise<void> => {
     const trace_id = (req as Request & { trace_id: string }).trace_id;
@@ -75,7 +75,7 @@ export class UserController {
     } catch (error) {
       this.handleError(error, req, res, trace_id);
     }
-  }
+  };
 
   deleteUser = async (req: Request, res: Response): Promise<void> => {
     const trace_id = (req as Request & { trace_id: string }).trace_id;
@@ -88,7 +88,7 @@ export class UserController {
     } catch (error) {
       this.handleError(error, req, res, trace_id);
     }
-  }
+  };
 
   private handleError = (error: unknown, req: Request, res: Response, trace_id: string): void => {
     if (error instanceof ZodError) {
@@ -116,5 +116,5 @@ export class UserController {
 
       jsonError(res, 'An unexpected error occurred', 500);
     }
-  }
+  };
 }

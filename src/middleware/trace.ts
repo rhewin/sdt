@@ -24,4 +24,4 @@ export const traceMiddleware = (req: Request, res: Response, next: NextFunction)
   res.setHeader('X-Trace-Id', req.trace_id);
 
   next();
-}
+};

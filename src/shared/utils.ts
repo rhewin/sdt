@@ -10,7 +10,7 @@ import { DateTime } from 'luxon';
 export const generateIdempotencyKey = (userId: string, messageType: string, date: Date): string => {
   const dateStr = DateTime.fromJSDate(date).toFormat('yyyy-MM-dd');
   return `${userId}:${messageType}:${dateStr}`;
-}
+};
 
 // Basic timezone validation (check if timezone string follows IANA format)
 export const isValidTimezoneFormat = (timezone: string): boolean => {
@@ -21,4 +21,4 @@ export const isValidTimezoneFormat = (timezone: string): boolean => {
   } catch {
     return false;
   }
-}
+};

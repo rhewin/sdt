@@ -8,7 +8,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 export const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
   formatters: {
-    level: (label) => {
+    level: label => {
       return { level: label };
     },
   },
@@ -32,7 +32,7 @@ export const logger = pino({
 // Create child logger with trace_id
 export const createLoggerWithTrace = (trace_id: string) => {
   return logger.child({ trace_id });
-}
+};
 
 // Log only errors
 export function logError(trace_id: string, error: Error, context?: Record<string, unknown>) {
@@ -48,12 +48,7 @@ export function logError(trace_id: string, error: Error, context?: Record<string
 }
 
 // Log external HTTP requests
-export function logExternalRequest(
-  trace_id: string,
-  method: string,
-  url: string,
-  body?: unknown
-) {
+export function logExternalRequest(trace_id: string, method: string, url: string, body?: unknown) {
   logger.info(
     {
       trace_id,
@@ -90,7 +85,11 @@ export function logExternalResponse(
 }
 
 // Log critical operations
-export function logCriticalOperation(trace_id: string, operation: string, data?: Record<string, unknown>) {
+export function logCriticalOperation(
+  trace_id: string,
+  operation: string,
+  data?: Record<string, unknown>
+) {
   logger.info(
     {
       trace_id,

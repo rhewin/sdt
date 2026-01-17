@@ -2,12 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { logError } from '@/config/logger';
 import { ApiResponse } from '@/shared/types';
 
-export function errorHandler(
-  error: Error,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
+export function errorHandler(error: Error, req: Request, res: Response, _next: NextFunction): void {
   const trace_id = req.trace_id || 'unknown';
 
   // Log the error

@@ -21,7 +21,8 @@ export class EmailService {
   private timeout: number;
 
   constructor() {
-    this.apiUrl = process.env.EMAIL_API_URL || 'https://email-service.digitalenvision.com.au/send-email';
+    this.apiUrl =
+      process.env.EMAIL_API_URL || 'https://email-service.digitalenvision.com.au/send-email';
     this.timeout = parseInt(process.env.EMAIL_API_TIMEOUT || '10000');
 
     // Create circuit breaker to prevent cascading failures
@@ -38,7 +39,10 @@ export class EmailService {
 
     // Circuit breaker events
     this.circuitBreaker.on('open', () => {
-      logger.error({ service: 'EmailService' }, 'Circuit breaker opened - email service unavailable');
+      logger.error(
+        { service: 'EmailService' },
+        'Circuit breaker opened - email service unavailable'
+      );
     });
 
     this.circuitBreaker.on('halfOpen', () => {
@@ -55,7 +59,10 @@ export class EmailService {
     });
   }
 
-  sendBirthdayMessage = async (user: User, trace_id: string = 'unknown'): Promise<EmailResponse> => {
+  sendBirthdayMessage = async (
+    user: User,
+    trace_id: string = 'unknown'
+  ): Promise<EmailResponse> => {
     const message = `Hey, ${user.getFullName()} it's your birthday`;
 
     const emailRequest: EmailRequest = {
@@ -64,9 +71,12 @@ export class EmailService {
     };
 
     return await this.circuitBreaker.fire(emailRequest, trace_id);
-  }
+  };
 
-  private sendEmailRequest = async (emailRequest: EmailRequest, trace_id: string): Promise<EmailResponse> => {
+  private sendEmailRequest = async (
+    emailRequest: EmailRequest,
+    trace_id: string
+  ): Promise<EmailResponse> => {
     const startTime = Date.now();
 
     // Log request
@@ -104,7 +114,9 @@ export class EmailService {
         if (!response.ok) {
           // 400 errors are client errors - don't retry
           if (response.status >= 400 && response.status < 500) {
-            const error = new Error(`Email API client error ${response.status}: ${responseBody}`) as Error & { statusCode?: number; shouldRetry?: boolean };
+            const error = new Error(
+              `Email API client error ${response.status}: ${responseBody}`
+            ) as Error & { statusCode?: number; shouldRetry?: boolean };
             error.statusCode = response.status;
             error.shouldRetry = false; // Mark as permanent failure
             throw error;
@@ -112,7 +124,9 @@ export class EmailService {
 
           // 500 errors are server errors - should retry
           if (response.status >= 500) {
-            const error = new Error(`Email API server error ${response.status}: ${responseBody}`) as Error & { statusCode?: number; shouldRetry?: boolean };
+            const error = new Error(
+              `Email API server error ${response.status}: ${responseBody}`
+            ) as Error & { statusCode?: number; shouldRetry?: boolean };
             error.statusCode = response.status;
             error.shouldRetry = true; // Will be retried by BullMQ
             throw error;
@@ -130,7 +144,9 @@ export class EmailService {
         clearTimeout(timeoutId);
 
         if ((error as Error).name === 'AbortError') {
-          const timeoutError = new Error(`Email API request timed out after ${this.timeout}ms`) as Error & { shouldRetry?: boolean };
+          const timeoutError = new Error(
+            `Email API request timed out after ${this.timeout}ms`
+          ) as Error & { shouldRetry?: boolean };
           timeoutError.shouldRetry = true; // Timeouts should be retried
           throw timeoutError;
         }
@@ -140,14 +156,9 @@ export class EmailService {
     } catch (error) {
       const duration = Date.now() - startTime;
 
-      logExternalResponse(
-        trace_id,
-        'POST',
-        this.apiUrl,
-        0,
-        duration,
-        { error: (error as Error).message }
-      );
+      logExternalResponse(trace_id, 'POST', this.apiUrl, 0, duration, {
+        error: (error as Error).message,
+      });
 
       logError(trace_id, error as Error, {
         service: 'EmailService',
@@ -156,7 +167,7 @@ export class EmailService {
 
       throw error;
     }
-  }
+  };
 
   // Get circuit breaker stats for monitoring
   getStats() {

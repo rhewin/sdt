@@ -23,7 +23,10 @@ async function runMigrations() {
     logger.info('Migration completed successfully');
     process.exit(0);
   } catch (error) {
-    logger.error({ error: (error as Error).message, stack: (error as Error).stack }, 'Migration failed');
+    logger.error(
+      { error: (error as Error).message, stack: (error as Error).stack },
+      'Migration failed'
+    );
     process.exit(1);
   }
 }

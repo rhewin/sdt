@@ -27,10 +27,10 @@ const queueOptions: QueueOptions = {
 export const birthdayQueue = new Queue('birthday-messages', queueOptions);
 
 // Queue events for monitoring
-birthdayQueue.on('error', (error) => {
+birthdayQueue.on('error', error => {
   logger.error({ error: error.message }, 'Queue error');
 });
 
-birthdayQueue.on('waiting', (jobId) => {
+birthdayQueue.on('waiting', jobId => {
   logger.debug({ jobId }, 'Job is waiting');
 });

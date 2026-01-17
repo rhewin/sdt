@@ -41,7 +41,7 @@ describe('HourlySchedulerService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: undefined,
-      getFullName: function() {
+      getFullName: function () {
         return `${this.firstName} ${this.lastName}`;
       },
       ...overrides,
@@ -74,7 +74,8 @@ describe('HourlySchedulerService', () => {
       messageLogRepository: MessageLogRepository;
     };
     mockUserRepository = serviceInternal.userRepository as jest.Mocked<UserRepository>;
-    mockMessageLogRepository = serviceInternal.messageLogRepository as jest.Mocked<MessageLogRepository>;
+    mockMessageLogRepository =
+      serviceInternal.messageLogRepository as jest.Mocked<MessageLogRepository>;
     mockBirthdayQueue = birthdayQueue as jest.Mocked<typeof birthdayQueue>;
 
     // Setup mocks
@@ -253,16 +254,20 @@ describe('HourlySchedulerService', () => {
     it('should process users with birthday today', async () => {
       const today = DateTime.now();
       const user = createMockUser({
-        birthDate: new Date(`1990-${today.month.toString().padStart(2, '0')}-${today.day.toString().padStart(2, '0')}`),
+        birthDate: new Date(
+          `1990-${today.month.toString().padStart(2, '0')}-${today.day.toString().padStart(2, '0')}`
+        ),
         timezone: 'America/New_York',
       });
 
       mockUserRepository.findAll.mockResolvedValue([user]);
       mockMessageLogRepository.findByIdempotencyKey.mockResolvedValue(null);
       mockMessageLogRepository.createOrGet.mockResolvedValue(createMockMessageLog());
-      mockMessageLogRepository.updateStatus.mockResolvedValue(createMockMessageLog({
-        status: MessageStatus.PENDING,
-      }));
+      mockMessageLogRepository.updateStatus.mockResolvedValue(
+        createMockMessageLog({
+          status: MessageStatus.PENDING,
+        })
+      );
 
       const trace_id = 'test-trace';
       await (schedulerService as any).processTodayBirthdays(trace_id);
@@ -278,7 +283,9 @@ describe('HourlySchedulerService', () => {
     it('should update existing unprocessed message to pending', async () => {
       const today = DateTime.now();
       const user = createMockUser({
-        birthDate: new Date(`1990-${today.month.toString().padStart(2, '0')}-${today.day.toString().padStart(2, '0')}`),
+        birthDate: new Date(
+          `1990-${today.month.toString().padStart(2, '0')}-${today.day.toString().padStart(2, '0')}`
+        ),
         timezone: 'America/New_York',
       });
 
@@ -288,9 +295,11 @@ describe('HourlySchedulerService', () => {
 
       mockUserRepository.findAll.mockResolvedValue([user]);
       mockMessageLogRepository.findByIdempotencyKey.mockResolvedValue(existingLog);
-      mockMessageLogRepository.updateStatus.mockResolvedValue(createMockMessageLog({
-        status: MessageStatus.PENDING,
-      }));
+      mockMessageLogRepository.updateStatus.mockResolvedValue(
+        createMockMessageLog({
+          status: MessageStatus.PENDING,
+        })
+      );
 
       const trace_id = 'test-trace';
       await (schedulerService as any).processTodayBirthdays(trace_id);
@@ -318,11 +327,15 @@ describe('HourlySchedulerService', () => {
       const today = DateTime.now();
       const user1 = createMockUser({
         id: 'user-1',
-        birthDate: new Date(`1990-${today.month.toString().padStart(2, '0')}-${today.day.toString().padStart(2, '0')}`),
+        birthDate: new Date(
+          `1990-${today.month.toString().padStart(2, '0')}-${today.day.toString().padStart(2, '0')}`
+        ),
       });
       const user2 = createMockUser({
         id: 'user-2',
-        birthDate: new Date(`1985-${today.month.toString().padStart(2, '0')}-${today.day.toString().padStart(2, '0')}`),
+        birthDate: new Date(
+          `1985-${today.month.toString().padStart(2, '0')}-${today.day.toString().padStart(2, '0')}`
+        ),
       });
 
       mockUserRepository.findAll.mockResolvedValue([user1, user2]);
@@ -351,9 +364,11 @@ describe('HourlySchedulerService', () => {
 
       mockMessageLogRepository.findByIdempotencyKey.mockResolvedValue(null);
       mockMessageLogRepository.createOrGet.mockResolvedValue(createMockMessageLog());
-      mockMessageLogRepository.updateStatus.mockResolvedValue(createMockMessageLog({
-        status: MessageStatus.PENDING,
-      }));
+      mockMessageLogRepository.updateStatus.mockResolvedValue(
+        createMockMessageLog({
+          status: MessageStatus.PENDING,
+        })
+      );
 
       const trace_id = 'test-trace';
       await (schedulerService as any).processUserBirthday(user, trace_id);

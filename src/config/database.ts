@@ -37,11 +37,11 @@ export const initializeDatabase = async (): Promise<void> => {
     logger.error({ error: (error as Error).message }, 'Error connecting to database');
     throw error;
   }
-}
+};
 
 export const closeDatabase = async (): Promise<void> => {
   if (AppDataSource.isInitialized) {
     await AppDataSource.destroy();
     logger.info('Database connection closed');
   }
-}
+};

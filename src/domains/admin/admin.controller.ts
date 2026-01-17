@@ -38,13 +38,16 @@ export class AdminController {
         failedIds: result.failed,
       });
     } catch (error) {
-      logger.error({
-        trace_id,
-        error: (error as Error).message,
-        stack: (error as Error).stack
-      }, 'Manual trigger failed');
+      logger.error(
+        {
+          trace_id,
+          error: (error as Error).message,
+          stack: (error as Error).stack,
+        },
+        'Manual trigger failed'
+      );
 
       jsonError(res, 'Failed to process pending messages', 500);
     }
-  }
+  };
 }

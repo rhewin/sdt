@@ -31,7 +31,7 @@ describe('UserService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: undefined,
-      getFullName: function() {
+      getFullName: function () {
         return `${this.firstName} ${this.lastName}`;
       },
       ...overrides,
