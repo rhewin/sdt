@@ -250,6 +250,90 @@ async function seedUsers() {
     );
 
     // ============================================
+    // USER 6: Birthday TODAY - Asia/Jakarta (UTC+7)
+    // ============================================
+    const user6 = await userService.createUser({
+      firstName: 'Ferry',
+      lastName: 'Jakarta',
+      email: `ferry.jakarta.${Date.now()}@example.com`,
+      birthDate: `${currentYear - 29}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}`, // 28 years old, birthday TODAY
+      timezone: 'Asia/Jakarta', // UTC+7
+    });
+
+    logger.info(
+      {
+        userId: user6.id,
+        name: user6.getFullName(),
+        birthDate: user6.birthDate,
+        timezone: 'Asia/Jakarta (UTC+7)',
+        scenario: 'Birthday TODAY',
+      },
+      'Created User 6 - Birthday Today (Jakarta)'
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const user6Logs = await messageLogRepository.findByIdempotencyKey(
+      `${user6.id}:birthday:${today.toFormat('yyyy-MM-dd')}`
+    );
+    const scheduledForJakarta2 = user6Logs?.scheduledFor
+      ? DateTime.fromJSDate(user6Logs.scheduledFor).setZone('Asia/Jakarta').toISO()
+      : null;
+    logger.info(
+      {
+        userId: user6.id,
+        messageLogExists: !!user6Logs,
+        status: user6Logs?.status,
+        scheduledFor: user6Logs?.scheduledFor,
+        scheduledForJakarta2,
+        expected:
+          'Should exist with status PENDING (if before 7 PM Jakarta) or PENDING with error (if after 7 PM Jakarta)',
+      },
+      'User 6 message_log check'
+    );
+
+    // ============================================
+    // USER 7: Birthday TODAY - Asia/Jakarta (UTC+7)
+    // ============================================
+    const user7 = await userService.createUser({
+      firstName: 'Gerry',
+      lastName: 'Jakarta',
+      email: `gerry.jakarta.${Date.now()}@example.com`,
+      birthDate: `${currentYear - 32}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}`, // 28 years old, birthday TODAY
+      timezone: 'Asia/Jakarta', // UTC+7
+    });
+
+    logger.info(
+      {
+        userId: user7.id,
+        name: user7.getFullName(),
+        birthDate: user7.birthDate,
+        timezone: 'Asia/Jakarta (UTC+7)',
+        scenario: 'Birthday TODAY',
+      },
+      'Created User 7 - Birthday Today (Jakarta)'
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const user7Logs = await messageLogRepository.findByIdempotencyKey(
+      `${user7.id}:birthday:${today.toFormat('yyyy-MM-dd')}`
+    );
+    const scheduledForJakarta3 = user7Logs?.scheduledFor
+      ? DateTime.fromJSDate(user7Logs.scheduledFor).setZone('Asia/Jakarta').toISO()
+      : null;
+    logger.info(
+      {
+        userId: user7.id,
+        messageLogExists: !!user7Logs,
+        status: user7Logs?.status,
+        scheduledFor: user7Logs?.scheduledFor,
+        scheduledForJakarta3,
+        expected:
+          'Should exist with status PENDING (if before 7 PM Jakarta) or PENDING with error (if after 7 PM Jakarta)',
+      },
+      'User 7 message_log check'
+    );
+
+    // ============================================
     // Summary
     // ============================================
     logger.info('='.repeat(80));
