@@ -1,4 +1,4 @@
-import 'tsconfig-paths/register';
+import 'module-alias/register';
 import { AppDataSource } from './config/database';
 import { logger } from './config/logger';
 

@@ -1,4 +1,4 @@
-import 'tsconfig-paths/register';
+import 'module-alias/register';
 import 'reflect-metadata';
 import express, { Express } from 'express';
 import { config } from 'dotenv';

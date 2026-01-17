@@ -1,6 +1,9 @@
+import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { logger } from './logger';
+import { User } from '../domains/user/user.model';
+import { MessageLog } from '../domains/message-log/message-log.model';
 
 config();
 
@@ -17,8 +20,8 @@ export const AppDataSource = new DataSource({
   database: process.env.DATABASE_NAME || 'sdt',
   synchronize: false, // Always use migrations in production
   logging: process.env.NODE_ENV === 'development',
-  entities: [`${dir}/domains/**/*.model.${ext}`],
-  migrations: [`${dir}/infra/migrations/**/*.${ext}`],
+  entities: [User, MessageLog],
+  migrations: [`${dir}/infra/migrations/*-*.${ext}`], // Only load migration files (exclude seeders)
   subscribers: [],
   extra: {
     max: parseInt(process.env.DATABASE_POOL_MAX || '10'),
