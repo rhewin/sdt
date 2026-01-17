@@ -1,7 +1,7 @@
 import CircuitBreaker from 'opossum';
 import { config } from 'dotenv';
 import { logExternalRequest, logExternalResponse, logError, logger } from '@/config/logger';
-import { User } from '@/models/User';
+import { User } from '@/domains/user/user.model';
 
 config();
 

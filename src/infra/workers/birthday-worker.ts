@@ -1,11 +1,12 @@
 import { Worker, Job } from 'bullmq';
 import { redisConnection } from '@/config/redis';
-import { UserRepository } from '@/repositories/UserRepository';
-import { MessageLogRepository } from '@/repositories/MessageLogRepository';
-import { EmailService } from '@/services/EmailService';
-import { MessageStatus } from '@/models/MessageLog';
-import { BirthdayMessageData } from '@/shared/types';
 import { logCriticalOperation, logError, logger } from '@/config/logger';
+import { EmailService } from '@/infra/email/email.service';
+import { BirthdayMessageData } from '@/shared/types';
+import { UserRepository } from '@/domains/user/user.repository';
+import { MessageLogRepository } from '@/domains/message-log/message-log.repository';
+import { MessageStatus } from '@/domains/message-log/message-log.model';
+
 
 export class BirthdayWorker {
   private worker: Worker;
@@ -75,7 +76,7 @@ export class BirthdayWorker {
         throw new Error(`Message log not found for idempotency key: ${idempotencyKey}`);
       }
 
-      // 2. Check if already sent (race condition protection)
+      // 2. Check if already sent/processing/failed (race condition protection)
       if (messageLog.status === MessageStatus.SENT) {
         logCriticalOperation(trace_id, 'message_already_sent', {
           jobId: job.id,
@@ -85,7 +86,30 @@ export class BirthdayWorker {
         return { success: true, skipped: true };
       }
 
-      // 3. Update status to processing
+      if (messageLog.status === MessageStatus.PROCESSING) {
+        // Another worker is already processing this - should not happen with BullMQ job IDs
+        // but protect against it anyway
+        logger.warn({
+          trace_id,
+          jobId: job.id,
+          messageLogId: messageLog.id,
+          userId,
+        }, 'Message already being processed by another worker (race condition detected)');
+        return { success: true, skipped: true };
+      }
+
+      if (messageLog.status === MessageStatus.FAILED && messageLog.errorMessage?.includes('Cancelled')) {
+        // Message was cancelled (user updated birthdate) - skip
+        logCriticalOperation(trace_id, 'message_cancelled_skip', {
+          jobId: job.id,
+          messageLogId: messageLog.id,
+          userId,
+          errorMessage: messageLog.errorMessage,
+        });
+        return { success: true, skipped: true };
+      }
+
+      // 3. Update status to processing (atomically marks as being processed)
       await this.messageLogRepository.updateStatus(messageLog.id, MessageStatus.PROCESSING);
 
       // 4. Get user data

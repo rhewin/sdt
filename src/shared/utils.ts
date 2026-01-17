@@ -11,3 +11,14 @@ export const generateIdempotencyKey = (userId: string, messageType: string, date
   const dateStr = DateTime.fromJSDate(date).toFormat('yyyy-MM-dd');
   return `${userId}:${messageType}:${dateStr}`;
 }
+
+// Basic timezone validation (check if timezone string follows IANA format)
+export const isValidTimezoneFormat = (timezone: string): boolean => {
+  try {
+    // Use Intl.DateTimeFormat to validate timezone
+    Intl.DateTimeFormat(undefined, { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}

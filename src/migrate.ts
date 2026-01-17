@@ -1,28 +1,29 @@
 import 'tsconfig-paths/register';
 import { AppDataSource } from './config/database';
+import { logger } from './config/logger';
 
 async function runMigrations() {
   try {
-    console.log('Initializing database connection...');
+    logger.info('Initializing database connection...');
     await AppDataSource.initialize();
 
-    console.log('Running migrations...');
+    logger.info('Running migrations...');
     const migrations = await AppDataSource.runMigrations();
 
     if (migrations.length === 0) {
-      console.log('No new migrations to run');
+      logger.info('No new migrations to run');
     } else {
-      console.log(`Successfully ran ${migrations.length} migration(s):`);
+      logger.info(`Successfully ran ${migrations.length} migration(s):`);
       migrations.forEach(migration => {
-        console.log(`  - ${migration.name}`);
+        logger.info(`  - ${migration.name}`);
       });
     }
 
     await AppDataSource.destroy();
-    console.log('Migration completed successfully');
+    logger.info('Migration completed successfully');
     process.exit(0);
   } catch (error) {
-    console.error('Migration failed:', error);
+    logger.error({ error: (error as Error).message, stack: (error as Error).stack }, 'Migration failed');
     process.exit(1);
   }
 }

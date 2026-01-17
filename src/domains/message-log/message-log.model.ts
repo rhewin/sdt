@@ -7,7 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from './User';
+import { User } from '@/domains/user/user.model';
 
 export enum MessageStatus {
   UNPROCESSED = 'unprocessed',

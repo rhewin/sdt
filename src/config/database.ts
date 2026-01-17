@@ -17,8 +17,8 @@ export const AppDataSource = new DataSource({
   database: process.env.DATABASE_NAME || 'sdt',
   synchronize: false, // Always use migrations in production
   logging: process.env.NODE_ENV === 'development',
-  entities: [`${dir}/models/**/*.${ext}`],
-  migrations: [`${dir}/migrations/**/*.${ext}`],
+  entities: [`${dir}/domains/**/*.model.${ext}`],
+  migrations: [`${dir}/infra/migrations/**/*.${ext}`],
   subscribers: [],
   extra: {
     max: parseInt(process.env.DATABASE_POOL_MAX || '10'),

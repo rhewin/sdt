@@ -3,9 +3,9 @@ import 'reflect-metadata';
 import { config } from 'dotenv';
 import { initializeDatabase, closeDatabase } from './config/database';
 import { closeRedis } from './config/redis';
-import { BirthdayWorker } from './queues/workers/birthdayWorker';
-import { HourlySchedulerService } from './services/HourlySchedulerService';
 import { logger } from './config/logger';
+import { BirthdayWorker } from './infra/workers/birthday-worker';
+import { HourlySchedulerService } from './infra/scheduling/scheduler.service';
 
 config();
 

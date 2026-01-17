@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
-import { createLoggerWithTrace } from '../config/logger';
+import { createLoggerWithTrace } from '@/config/logger';
 
 // Extend Express Request type to include trace_id
 declare global {

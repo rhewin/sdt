@@ -1,6 +1,6 @@
 import { Repository, LessThan, In } from 'typeorm';
-import { AppDataSource } from '../config/database';
-import { MessageLog, MessageStatus } from '../models/MessageLog';
+import { AppDataSource } from '@/config/database';
+import { MessageLog, MessageStatus } from './message-log.model';
 
 export class MessageLogRepository {
   private repository: Repository<MessageLog>;
@@ -54,6 +54,16 @@ export class MessageLogRepository {
       messageLog.errorMessage = errorMessage;
     }
 
+    return await this.repository.save(messageLog);
+  }
+
+  update = async (id: string, data: Partial<MessageLog>): Promise<MessageLog | null> => {
+    const messageLog = await this.findById(id);
+    if (!messageLog) {
+      return null;
+    }
+
+    Object.assign(messageLog, data);
     return await this.repository.save(messageLog);
   }
 

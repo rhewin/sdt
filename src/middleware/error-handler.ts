@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { logError } from '../config/logger';
-import { ApiResponse } from '../shared/types';
+import { logError } from '@/config/logger';
+import { ApiResponse } from '@/shared/types';
 
 export function errorHandler(
   error: Error,

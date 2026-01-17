@@ -10,5 +10,6 @@ export const healthController = async (_: Request, res: Response): Promise<void>
     uptime: process.uptime(),
     database: AppDataSource.isInitialized ? 'connected' : 'disconnected'
   };
-  jsonOk(res, 'System healthy', 200, healthCheck)
+
+  jsonOk(res, 'System healthy', 200, healthCheck);
 }

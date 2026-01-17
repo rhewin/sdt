@@ -14,6 +14,7 @@
     "migrate:run:prod": "node dist/migrate.js",
     "migrate:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -d src/config/database.ts",
     "backfill:today": "ts-node src/scripts/backfill-today-birthdays.ts",
+    "seed:users": "ts-node src/infra/migrations/seeders/users.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

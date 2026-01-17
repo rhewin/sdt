@@ -3,13 +3,17 @@ import 'reflect-metadata';
 import express, { Express } from 'express';
 import { config } from 'dotenv';
 import { traceMiddleware } from '@/middleware/trace';
-import { errorHandler, notFoundHandler } from '@/middleware/errorHandler';
-import router from '@/router';
+import { errorHandler, notFoundHandler } from '@/middleware/error-handler';
+import { notificationEventSubscriber } from '@/infra/notification/notification.events';
+import v1Router from '@/routes/v1';
 
 config();
 
 export function createApp(): Express {
   const app = express();
+
+  // Register event subscribers for domain events
+  notificationEventSubscriber.register();
 
   // Body parsing middleware
   app.use(express.json());
@@ -19,7 +23,7 @@ export function createApp(): Express {
   app.use(traceMiddleware);
 
   // API routes
-  app.use(router);
+  app.use('/api/v1', v1Router);
 
   // 404 handler
   app.use(notFoundHandler);

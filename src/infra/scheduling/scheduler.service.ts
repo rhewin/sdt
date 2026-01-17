@@ -1,13 +1,15 @@
 import { DateTime } from 'luxon';
 import cron from 'node-cron';
-import { UserRepository } from '../repositories/UserRepository';
-import { MessageLogRepository } from '../repositories/MessageLogRepository';
-import { birthdayQueue } from '../config/queue';
-import { generateIdempotencyKey } from '../shared/utils';
-import { MessageStatus } from '../models/MessageLog';
-import { BirthdayMessageData } from '../shared/types';
-import { logger, logCriticalOperation } from '../config/logger';
-import { BIRTHDAY_MESSAGE_HOUR } from '../config/constants';
+import { BIRTHDAY_MESSAGE_HOUR } from '@/config/constants';
+import { birthdayQueue } from '@/config/queue';
+import { logger, logCriticalOperation } from '@/config/logger';
+import { generateIdempotencyKey } from '@/shared/utils';
+import { BirthdayMessageData } from '@/shared/types';
+import { User } from '@/domains/user/user.model';
+import { UserRepository } from '@/domains/user/user.repository';
+import { MessageLogRepository } from '@/domains/message-log/message-log.repository';
+import { MessageStatus } from '@/domains/message-log/message-log.model';
+
 
 export class HourlySchedulerService {
   private cronJob: cron.ScheduledTask | null = null;
@@ -104,7 +106,7 @@ export class HourlySchedulerService {
   /**
    * Process a single user's birthday - create message_logs entry if not exists
    */
-  private processUserBirthday = async (user: any, trace_id: string): Promise<void> => {
+  private processUserBirthday = async (user: User, trace_id: string): Promise<void> => {
     const todayInUserTz = DateTime.now().setZone(user.timezone);
     const birthDate = user.birthDate instanceof Date
       ? DateTime.fromJSDate(user.birthDate)
@@ -175,7 +177,7 @@ export class HourlySchedulerService {
 
   /**
    * Queue pending messages whose scheduled_for time has arrived or passed
-   * Respects user timezone - each user gets message at their local 7 PM
+   * Respects user timezone - each user gets message at their local time
    * @param trace_id - Trace ID for logging
    * @param checkDueTime - If false, queues all pending messages regardless of scheduled time (default: true)
    */

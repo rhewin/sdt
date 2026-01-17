@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { HourlySchedulerService } from '@/services/HourlySchedulerService';
+import { HourlySchedulerService } from '@/infra/scheduling/scheduler.service';
 import { logger } from '@/config/logger';
 import { jsonOk, jsonError } from '@/shared/output';
 
-export class ManualController {
+export class AdminController {
   private schedulerService: HourlySchedulerService;
 
   constructor() {

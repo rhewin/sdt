@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
-import { AppDataSource } from '../config/database';
-import { User } from '../models/User';
-import { CreateUserDto, UpdateUserDto } from '../shared/types';
+import { AppDataSource } from '@/config/database';
+import { CreateUserDto, UpdateUserDto } from '@/shared/types';
+import { User } from './user.model';
 
 export class UserRepository {
   private repository: Repository<User>;

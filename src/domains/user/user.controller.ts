@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { UserService } from '@/services/UserService';
-import { CreateUserDto, UpdateUserDto } from '@/shared/types';
-import { logError } from '@/config/logger';
 import { ZodError } from 'zod';
+import { CreateUserDto, UpdateUserDto } from '@/shared/types';
 import { jsonOk, jsonError } from '@/shared/output';
+import { logError } from '@/config/logger';
+import { UserService } from './user.service';
 
 export class UserController {
   private userService: UserService;
