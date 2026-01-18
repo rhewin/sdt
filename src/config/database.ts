@@ -2,10 +2,12 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { logger } from './logger';
-import { User } from '../domains/user/user.model';
-import { MessageLog } from '../domains/message-log/message-log.model';
 
 config();
+
+// Import entities AFTER reflect-metadata and dotenv config
+import { User } from '@/domains/user/user.model';
+import { MessageLog } from '@/domains/message-log/message-log.model';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const ext = isProduction ? 'js' : 'ts';
@@ -20,7 +22,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DATABASE_NAME || 'sdt',
   synchronize: false, // Always use migrations in production
   logging: process.env.NODE_ENV === 'development',
-  entities: [User, MessageLog],
+  entities: [User, MessageLog, `${dir}/domains/**/*.model.{${ext}}`],
   migrations: [`${dir}/infra/migrations/*-*.${ext}`], // Only load migration files (exclude seeders)
   subscribers: [],
   extra: {
@@ -32,7 +34,10 @@ export const AppDataSource = new DataSource({
 export const initializeDatabase = async (): Promise<void> => {
   try {
     await AppDataSource.initialize();
-    logger.info('Database connection established successfully');
+
+    // Log registered entities for debugging
+    const entities = AppDataSource.entityMetadatas.map(e => e.name);
+    logger.info({ entities }, 'Database connection established successfully');
   } catch (error) {
     logger.error({ error: (error as Error).message }, 'Error connecting to database');
     throw error;

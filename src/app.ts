@@ -1,5 +1,5 @@
-import 'module-alias/register';
 import 'reflect-metadata';
+import 'module-alias/register';
 import express, { Express } from 'express';
 import { config } from 'dotenv';
 import { traceMiddleware } from '@/middleware/trace';

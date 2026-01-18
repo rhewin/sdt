@@ -1,6 +1,7 @@
+import 'reflect-metadata';
 import 'module-alias/register';
-import { AppDataSource } from './config/database';
-import { logger } from './config/logger';
+import { AppDataSource } from '@/config/database';
+import { logger } from '@/config/logger';
 
 async function runMigrations() {
   try {

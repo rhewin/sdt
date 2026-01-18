@@ -1,21 +1,19 @@
-import { Repository, LessThan, In } from 'typeorm';
+import { LessThan, In, Repository } from 'typeorm';
 import { AppDataSource } from '@/config/database';
-import { MessageLog, MessageStatus } from './message-log.model';
+import { MessageLog, MessageStatus } from '@/domains/message-log/message-log.model';
+import { CreateMessageLogDto, UpdateMessageLogDto } from './message-log.types';
 
 export class MessageLogRepository {
-  private repository: Repository<MessageLog>;
+  private _repository: Repository<MessageLog> | null = null;
 
-  constructor() {
-    this.repository = AppDataSource.getRepository(MessageLog);
+  private get repository(): Repository<MessageLog> {
+    if (!this._repository) {
+      this._repository = AppDataSource.getRepository(MessageLog);
+    }
+    return this._repository;
   }
 
-  create = async (data: {
-    userId: string;
-    messageType: string;
-    scheduledDate: Date;
-    scheduledFor: Date;
-    idempotencyKey: string;
-  }): Promise<MessageLog> => {
+  create = async (data: CreateMessageLogDto): Promise<MessageLog> => {
     const messageLog = this.repository.create(data);
     return await this.repository.save(messageLog);
   };
@@ -57,7 +55,7 @@ export class MessageLogRepository {
     return await this.repository.save(messageLog);
   };
 
-  update = async (id: string, data: Partial<MessageLog>): Promise<MessageLog | null> => {
+  update = async (id: string, data: UpdateMessageLogDto): Promise<MessageLog | null> => {
     const messageLog = await this.findById(id);
     if (!messageLog) {
       return null;
@@ -77,13 +75,7 @@ export class MessageLogRepository {
     });
   };
 
-  createOrGet = async (data: {
-    userId: string;
-    messageType: string;
-    scheduledDate: Date;
-    scheduledFor: Date;
-    idempotencyKey: string;
-  }): Promise<MessageLog> => {
+  createOrGet = async (data: CreateMessageLogDto): Promise<MessageLog> => {
     const existing = await this.findByIdempotencyKey(data.idempotencyKey);
     if (existing) {
       return existing;
@@ -95,11 +87,22 @@ export class MessageLogRepository {
     // Format date as YYYY-MM-DD for comparison
     const dateStr = date.toISOString().split('T')[0];
 
+    // Use find() with in-memory filtering
+    // Query builder would be more efficient, but this works reliably across all TypeORM versions
     return await this.repository
-      .createQueryBuilder('message_log')
-      .where('message_log.status = :status', { status: MessageStatus.PENDING })
-      .andWhere('DATE(message_log.scheduled_date) = :date', { date: dateStr })
-      .leftJoinAndSelect('message_log.user', 'user')
-      .getMany();
+      .find({
+        where: {
+          status: MessageStatus.PENDING,
+        },
+        relations: ['user'],
+      })
+      .then(messages => {
+        return messages.filter(msg => {
+          const msgDate =
+            msg.scheduledDate instanceof Date ? msg.scheduledDate : new Date(msg.scheduledDate);
+          const msgDateStr = msgDate.toISOString().split('T')[0];
+          return msgDateStr === dateStr;
+        });
+      });
   };
 }

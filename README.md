@@ -52,10 +52,14 @@ curl --location 'https://email-service.digitalenvision.com.au/send-email' \
 - Support graceful shutdown, allowing clean stopping services
 - Separating process between API server & worker
 - Connection pooling support for PostgreSQL
-- Added manual trigger for late registered user that has a birthday on that day
+- API versioning
+- Added manual trigger for late registered user that has a birthday on that day by
+  endpoint: api/v1/manual/send-birthday-message
 - `Prettier` + `Linter` for code standarization across team
 - Pre-commit runs linter by `Husky`
 - Add `Makefile` for easier cli command script
+- Include unit test, runs by command: npm run test
+- 0 error lint
 
 ## How to Run
 

@@ -1,4 +1,4 @@
-.PHONY: help install build clean dev-server dev-worker start-server start-worker migrate seed lint test docker-up docker-down docker-clean docker-logs
+.PHONY: help install build clean dev-server dev-worker start-server start-worker migrate seed lint test docker-up docker-build docker-up-build docker-down docker-clean docker-logs fresh
 
 # Default target
 help:
@@ -18,12 +18,14 @@ help:
 	@echo "  make start        - Start both server and worker (parallel)"
 	@echo ""
 	@echo "Docker:"
-	@echo "  make docker-up    - Start Docker containers (Postgres, Redis)"
-	@echo "  make docker-down  - Stop Docker containers"
-	@echo "  make docker-clean - Stop and remove containers, volumes, networks"
-	@echo "  make docker-logs  - Show Docker container logs"
-	@echo "  make docker-ps    - Show running Docker containers"
-	@echo "  make fresh        - Clean Docker volumes + migrate (full reset)"
+	@echo "  make docker-up       - Start Docker containers (Postgres, Redis)"
+	@echo "  make docker-build    - Build Docker images"
+	@echo "  make docker-up-build - Build and start Docker containers"
+	@echo "  make docker-down     - Stop Docker containers"
+	@echo "  make docker-clean    - Stop and remove containers, volumes, networks"
+	@echo "  make docker-logs     - Show Docker container logs"
+	@echo "  make docker-ps       - Show running Docker containers"
+	@echo "  make fresh           - Clean + rebuild images + migrate (full reset)"
 	@echo ""
 	@echo "Database:"
 	@echo "  make migrate      - Run database migrations"
@@ -103,6 +105,19 @@ docker-up:
 	@echo "Waiting for services to be ready..."
 	@sleep 3
 	@echo "Docker containers started!"
+	@echo "Run 'make docker-ps' to check status"
+
+docker-build:
+	@echo "Building Docker images..."
+	docker-compose -f docker/docker-compose.yml build
+	@echo "Docker images built!"
+
+docker-up-build:
+	@echo "Building and starting Docker containers..."
+	docker-compose -f docker/docker-compose.yml up -d --build
+	@echo "Waiting for services to be ready..."
+	@sleep 3
+	@echo "Docker containers started with fresh build!"
 	@echo "Run 'make docker-ps' to check status"
 
 docker-down:
@@ -257,9 +272,11 @@ stop-all: docker-down
 	@echo "All processes stopped!"
 
 # Fresh start - clean everything and start over
-fresh: docker-clean docker-up
+fresh: docker-clean
+	@echo "Building and starting Docker containers with fresh build..."
+	docker-compose -f docker/docker-compose.yml up -d --build
 	@echo "Waiting for database to be ready..."
 	@sleep 5
 	@echo "Running migrations with ts-node (development mode)..."
 	@$(MAKE) migrate
-	@echo "Fresh start complete! Database reset with latest migrations."
+	@echo "Fresh start complete! Database reset with latest migrations and rebuilt images."

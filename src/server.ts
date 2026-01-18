@@ -1,8 +1,9 @@
+import 'reflect-metadata';
 import 'module-alias/register';
-import { createApp } from './app';
-import { initializeDatabase, closeDatabase } from './config/database';
-import { closeRedis } from './config/redis';
-import { logger } from './config/logger';
+import { createApp } from '@/app';
+import { initializeDatabase, closeDatabase } from '@/config/database';
+import { closeRedis } from '@/config/redis';
+import { logger } from '@/config/logger';
 
 const PORT = process.env.PORT || 3000;
 

@@ -12,7 +12,7 @@ export class AdminController {
 
   /**
    * Manual trigger to send pending birthday messages for today
-   * POST /birthday/send-pending
+   * POST /manual/send-birthday-
    * Forces immediate queuing regardless of scheduled time
    */
   sendPendingMessages = async (req: Request, res: Response): Promise<void> => {
@@ -23,6 +23,7 @@ export class AdminController {
 
       // Use scheduler service with checkDueTime=false to skip time check
       const result = await this.schedulerService.queueDueMessages(trace_id, false);
+      logger.info({ result }, 'queueDueMessages: ');
 
       if (result.total === 0) {
         jsonOk(res, 'No pending messages found for today', 200, { count: 0 });

@@ -1,13 +1,16 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '@/config/database';
-import { CreateUserDto, UpdateUserDto } from '@/shared/types';
+import { CreateUserDto, UpdateUserDto } from './user.types';
 import { User } from './user.model';
 
 export class UserRepository {
-  private repository: Repository<User>;
+  private _repository: Repository<User> | null = null;
 
-  constructor() {
-    this.repository = AppDataSource.getRepository(User);
+  private get repository(): Repository<User> {
+    if (!this._repository) {
+      this._repository = AppDataSource.getRepository(User);
+    }
+    return this._repository;
   }
 
   create = async (data: CreateUserDto): Promise<User> => {

@@ -7,10 +7,13 @@ import { NotificationService } from './notification.service';
  * Subscribe to domain events and trigger notification scheduling
  */
 export class NotificationEventSubscriber {
-  private notificationService: NotificationService;
+  private notificationService: NotificationService | null = null;
 
-  constructor() {
-    this.notificationService = new NotificationService();
+  private getNotificationService(): NotificationService {
+    if (!this.notificationService) {
+      this.notificationService = new NotificationService();
+    }
+    return this.notificationService;
   }
 
   /**
@@ -47,7 +50,7 @@ export class NotificationEventSubscriber {
     );
 
     try {
-      await this.notificationService.scheduleAllForNewUser(user, trace_id);
+      await this.getNotificationService().scheduleAllForNewUser(user, trace_id);
     } catch (error) {
       logger.error(
         {
@@ -79,7 +82,7 @@ export class NotificationEventSubscriber {
     );
 
     try {
-      await this.notificationService.handleUserUpdate(user, oldUser, changes, trace_id);
+      await this.getNotificationService().handleUserUpdate(user, oldUser, changes, trace_id);
     } catch (error) {
       logger.error(
         {

@@ -3,6 +3,7 @@ import { BIRTHDAY_MESSAGE_HOUR } from '@/config/constants';
 import { logCriticalOperation, logError, logger } from '@/config/logger';
 import { generateIdempotencyKey } from '@/shared/utils';
 import { MessageLogRepository } from '@/domains/message-log/message-log.repository';
+import { MessageStatus } from '@/domains/message-log/message-log.model';
 import { User } from '@/domains/user/user.model';
 import { NotificationHandler, ScheduleResult } from '../types/notification.types';
 
@@ -93,11 +94,11 @@ export class BirthdayHandler implements NotificationHandler {
       const now = DateTime.now();
       const executionTimePassed = executionTimeUtc < now;
 
-      let status: 'unprocessed' | 'pending' = 'unprocessed';
+      let status: MessageStatus = MessageStatus.UNPROCESSED;
       let errorMessage: string | undefined = undefined;
 
       if (isBirthdayToday) {
-        status = 'pending';
+        status = MessageStatus.PENDING;
         if (executionTimePassed) {
           errorMessage = 'User created after scheduled send time, requires manual trigger';
         }
@@ -113,8 +114,8 @@ export class BirthdayHandler implements NotificationHandler {
       });
 
       // Update status and error message if needed
-      if (status === 'pending' || errorMessage) {
-        await this.messageLogRepository.updateStatus(messageLog.id, status as any, errorMessage);
+      if (status === MessageStatus.PENDING || errorMessage) {
+        await this.messageLogRepository.updateStatus(messageLog.id, status, errorMessage);
       }
 
       logCriticalOperation(trace_id, 'birthday_message_log_created', {

@@ -1,5 +1,5 @@
-import 'module-alias/register';
 import 'reflect-metadata';
+import 'module-alias/register';
 import { config } from 'dotenv';
 import { DateTime } from 'luxon';
 import { initializeDatabase, closeDatabase } from '@/config/database';
@@ -339,7 +339,7 @@ async function seedUsers() {
     logger.info('='.repeat(80));
     logger.info('Seeder completed successfully!');
     logger.info('='.repeat(80));
-    logger.info('Created 5 users with different birthday scenarios:');
+    logger.info('Created 7 users with different birthday scenarios:');
     logger.info(
       `1. ${user1.getFullName()} - Birthday already passed (${pastBirthday.toFormat('MMM dd')})`
     );
@@ -349,6 +349,8 @@ async function seedUsers() {
     logger.info(`3. ${user3.getFullName()} - Birthday TODAY (Asia/Jakarta, UTC+7)`);
     logger.info(`4. ${user4.getFullName()} - Birthday TODAY (Asia/Dhaka, UTC+6)`);
     logger.info(`5. ${user5.getFullName()} - Birthday TODAY (Asia/Singapore, UTC+8)`);
+    logger.info(`6. ${user6.getFullName()} - Birthday TODAY (Asia/Jakarta, UTC+7)`);
+    logger.info(`7. ${user7.getFullName()} - Birthday TODAY (Asia/Jakarta, UTC+7)`);
     logger.info('='.repeat(80));
     logger.info('Message logs created automatically via event system');
     logger.info('Check the database to verify message_logs table');

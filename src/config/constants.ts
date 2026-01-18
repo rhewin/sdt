@@ -6,7 +6,7 @@
  * Hour (0-23) when birthday messages should be sent in user's local timezone
  * Example: 19 = 7:00 PM in user's timezone
  */
-export const BIRTHDAY_MESSAGE_HOUR = process.env.BIRTHDAY_MESSAGE_HOUR || 9;
+export const BIRTHDAY_MESSAGE_HOUR = Number(process.env.BIRTHDAY_MESSAGE_HOUR) || 9;
 
 /**
  * Maximum number of retry attempts for failed messages

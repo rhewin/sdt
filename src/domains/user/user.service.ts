@@ -1,8 +1,8 @@
-import { CreateUserDto, UpdateUserDto } from '@/shared/types';
 import { isValidTimezoneFormat } from '@/shared/utils';
 import { eventBus } from '@/infra/events/event-bus';
 import { EventName, UserCreatedEvent, UserUpdatedEvent } from '@/infra/events/event.types';
 import { User } from './user.model';
+import { CreateUserDto, UpdateUserDto } from './user.types';
 import { UserRepository } from './user.repository';
 import { createUserSchema, updateUserSchema } from './user.validation';
 
